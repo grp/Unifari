@@ -47,8 +47,6 @@ static BOOL is_string_url(NSString *location) {
         
         BOOL special = ([scheme isEqualToString:@"localhost"]);
         
-        NSLog(@"i am alpha:%d and special:%d for string: %@", alphanumeric, special, scheme);
-        
         if (alphanumeric && !special)
             return YES;
     }
@@ -168,7 +166,6 @@ __attribute__((constructor)) static void Unifari_init()
     add_to_class(NSClassFromString(@"BrowserWindowControllerMac"), @selector(initWithWindow:), (IMP) supercall_browserwindowcontrollermac_initwithwindow, "@@:@");
     hook_class(NSClassFromString(@"BrowserWindowControllerMac"), @selector(initWithWindow:), (IMP) browserwindowcontrollermac_initwithwindow, (IMP *) &original_browserwindowcontrollermac_initwithwindow);
     hook_class(NSClassFromString(@"BrowserWindowControllerMac"), @selector(goToToolbarLocation:), (IMP) browserwindowcontrollermac_gototoolbarlocation, (IMP *) &original_browserwindowcontrollermac_gototoolbarlocation);
-    hook_class(NSClassFromString(@"LocationTextField"), @selector(becomeFirstResponder), (IMP) locationtextfield_becomefirstresponder, (IMP *) &original_locationtextfield_becomefirstresponder);
     hook_class(NSClassFromString(@"LocationTextField"), @selector(mouseDown:), (IMP) locationtextfield_mousedown, (IMP *) &original_locationtextfield_mousedown);
     
 #ifdef SIMBL
