@@ -27,6 +27,8 @@
 @interface LocationTextField : NSTextField {
 }
 
+- (void)_updateStringTruncationAndPlacement;
+
 @end
 
 static BOOL is_string_url(NSString *location) {
@@ -103,16 +105,17 @@ static id browserwindowcontrollermac_initwithwindow(BrowserWindowControllerMac *
     return self;
 }
 
-static BOOL (*original_locationtextfield_becomefirstresponder)(LocationTextField *self, SEL _cmd);
-static BOOL locationtextfield_becomefirstresponder(LocationTextField *self, SEL _cmd) {
-    BOOL result = original_locationtextfield_becomefirstresponder(self, _cmd);
+static void (*original_locationtextfield_mousedown)(LocationTextField *self, SEL _cmd, NSEvent *event);
+static void locationtextfield_mousedown(LocationTextField *self, SEL _cmd, NSEvent *event) {
+    original_locationtextfield_mousedown(self, _cmd, event);
     
-    if (result) {
-        [self performSelector:@selector(selectText:) withObject:self afterDelay:0];
+    NSText *editor = [[self window] fieldEditor:YES forObject:self];
+    NSEvent *currentEvent = [NSApp currentEvent];
+    if ([currentEvent type] == NSLeftMouseUp && ![editor selectedRange].length) {
+        [editor selectAll:nil];
     }
-    
-    return result;
 }
+
 
 static void hook_class(Class cls, SEL selector, IMP replacement, IMP *original) {
 #ifdef SUBSTRATE
@@ -166,6 +169,7 @@ __attribute__((constructor)) static void Unifari_init()
     hook_class(NSClassFromString(@"BrowserWindowControllerMac"), @selector(initWithWindow:), (IMP) browserwindowcontrollermac_initwithwindow, (IMP *) &original_browserwindowcontrollermac_initwithwindow);
     hook_class(NSClassFromString(@"BrowserWindowControllerMac"), @selector(goToToolbarLocation:), (IMP) browserwindowcontrollermac_gototoolbarlocation, (IMP *) &original_browserwindowcontrollermac_gototoolbarlocation);
     hook_class(NSClassFromString(@"LocationTextField"), @selector(becomeFirstResponder), (IMP) locationtextfield_becomefirstresponder, (IMP *) &original_locationtextfield_becomefirstresponder);
+    hook_class(NSClassFromString(@"LocationTextField"), @selector(mouseDown:), (IMP) locationtextfield_mousedown, (IMP *) &original_locationtextfield_mousedown);
     
 #ifdef SIMBL
     for (NSWindow *window in [[NSApplication sharedApplication] windows]) {
